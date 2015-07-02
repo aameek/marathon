@@ -176,9 +176,7 @@ class GroupsResource @Inject() (
         )
       }
       val scaleChange = update.scaleBy.map { scale =>
-        group.transitiveApps.foldLeft(group) { (changedGroup, app) =>
-          changedGroup.updateApp(app.id, _.copy(instances = (app.instances * scale).ceil.toInt), version)
-        }
+        group.updateApp(version) { app => app.copy(instances = (app.instances * scale).ceil.toInt) }
       }
       versionChange orElse scaleChange getOrElse update.apply(group, version)
     }

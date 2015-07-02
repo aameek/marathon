@@ -112,4 +112,8 @@ case class AppUpdate(
     version.getOrElse(Timestamp.now())
   )
 
+  def withCanonizedIds(base: PathId = PathId.empty): AppUpdate = copy(
+    id = id.map(_.canonicalPath(base)),
+    dependencies = dependencies.map(_.map(_.canonicalPath(base)))
+  )
 }

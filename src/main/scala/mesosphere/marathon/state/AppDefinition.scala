@@ -264,6 +264,11 @@ case class AppDefinition(
       runningDeployments, taskFailure, this
     )
 
+  def withCanonizedIds(base: PathId = PathId.empty): AppDefinition = {
+    val baseId = id.canonicalPath(base)
+    copy(id = baseId, dependencies = dependencies.map(_.canonicalPath(baseId)))
+  }
+
   def withNormalizedVersion: AppDefinition = copy(version = Timestamp(0))
 
   def isOnlyScaleChange(to: AppDefinition): Boolean =
