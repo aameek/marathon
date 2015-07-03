@@ -15,7 +15,7 @@ import mesosphere.marathon.tasks.{ TaskQueue, TaskTracker }
 import mesosphere.marathon.upgrade.DeploymentManager._
 import mesosphere.marathon.upgrade.{ DeploymentManager, DeploymentPlan, TaskKillActor }
 import mesosphere.mesos.protos
-import org.apache.mesos.Protos.{ TaskID, TaskState, TaskStatus }
+import org.apache.mesos.Protos.{ SlaveID, TaskID, TaskState, TaskStatus }
 import org.apache.mesos.SchedulerDriver
 import org.slf4j.LoggerFactory
 

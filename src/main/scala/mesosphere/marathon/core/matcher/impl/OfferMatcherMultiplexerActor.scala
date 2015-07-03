@@ -64,7 +64,7 @@ private class OfferMatcherMultiplexerActor private (random: Random, clock: Clock
   private[this] var livingMatchers: Set[OfferMatcher] = Set.empty
   private[this] var offerQueues: Map[OfferID, OfferMatcherMultiplexerActor.OfferData] = Map.empty
 
-  override def receive: Receive = {
+  override def receive: Receive = LoggingReceive {
     Seq[Receive](
       setLaunchTokens,
       changingConsumers,
@@ -73,11 +73,11 @@ private class OfferMatcherMultiplexerActor private (random: Random, clock: Clock
     ).reduceLeft(_.orElse[Any, Unit](_))
   }
 
-  private[this] def setLaunchTokens: Receive = LoggingReceive.withLabel("setLaunchTokens") {
+  private[this] def setLaunchTokens: Receive = {
     case OfferMatcherMultiplexerActor.SetTaskLaunchTokens(tokens) => launchTokens = tokens
   }
 
-  private[this] def changingConsumers: Receive = LoggingReceive.withLabel("changingConsumers") {
+  private[this] def changingConsumers: Receive = {
     case ActorOfferMatcherManager.AddMatcher(consumer) =>
       livingMatchers += consumer
       offerQueues.mapValues(_.addConsumer(consumer))
@@ -88,7 +88,11 @@ private class OfferMatcherMultiplexerActor private (random: Random, clock: Clock
       sender() ! ActorOfferMatcherManager.MatcherRemoved(consumer)
   }
 
-  private[this] def receiveProcessOffer: Receive = LoggingReceive.withLabel("receiveProcessOffer") {
+  private[this] def receiveProcessOffer: Receive = {
+    case ActorOfferMatcher.MatchOffer(deadline, offer: Offer) if livingMatchers.isEmpty =>
+      log.debug(s"Ignoring offer ${offer.getId.getValue}: No one interested.")
+      sender() ! OfferMatcher.MatchedTasks(offer.getId, Seq.empty)
+
     case processOffer @ ActorOfferMatcher.MatchOffer(deadline, offer: Offer) =>
       log.info(s"Start processing offer ${offer.getId.getValue}")
 
