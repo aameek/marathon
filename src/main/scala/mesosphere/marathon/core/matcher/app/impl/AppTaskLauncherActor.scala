@@ -38,7 +38,7 @@ private[impl] object AppTaskLauncherActor {
     * Increase the task count of the receiver.
     * The actor responds with a [[QueuedTaskCount]] message.
     */
-  case class AddTasks(count: Int) extends Requests
+  case class AddTasks(app: AppDefinition, count: Int) extends Requests
   /**
     * Get the current count.
     * The actor responds with a [[QueuedTaskCount]] message.
@@ -57,10 +57,11 @@ private class AppTaskLauncherActor(
   taskFactory: TaskFactory,
   taskStatusObservable: TaskStatusObservables,
   taskTracker: TaskTracker,
-  app: AppDefinition,
+  initialApp: AppDefinition,
   initialCount: Int)
     extends Actor with ActorLogging {
 
+  var app = initialApp
   var count = initialCount
   var inFlightTaskLaunches = Set.empty[TaskID]
 
@@ -134,7 +135,11 @@ private class AppTaskLauncherActor(
   }
 
   private[this] def receiveAddCount: Receive = {
-    case AppTaskLauncherActor.AddTasks(addCount) =>
+    case AppTaskLauncherActor.AddTasks(newApp, addCount) =>
+      if (app != newApp) {
+        app = newApp
+        log.info("getting new app definition for {}, version {}", app.id, app.version)
+      }
       count += addCount
       sender() ! QueuedTaskCount(app, count)
   }

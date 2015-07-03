@@ -132,7 +132,7 @@ private[impl] class CoreTaskQueueActor(appActorProps: (AppDefinition, Int) => Pr
         case Some(actorRef) =>
           import context.dispatcher
           val eventualCount: Future[QueuedTaskCount] =
-            (actorRef ? AppTaskLauncherActor.AddTasks(count)).mapTo[QueuedTaskCount]
+            (actorRef ? AppTaskLauncherActor.AddTasks(app, count)).mapTo[QueuedTaskCount]
           eventualCount.map(_ => ()).pipeTo(sender())
       }
   }

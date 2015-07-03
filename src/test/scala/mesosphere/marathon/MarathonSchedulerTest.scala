@@ -5,7 +5,7 @@ import akka.event.EventStream
 import akka.testkit.{ TestKit, TestProbe }
 import com.google.common.collect.Lists
 import mesosphere.marathon.Protos.MarathonTask
-import mesosphere.marathon.core.base.DefaultClock
+import mesosphere.marathon.core.base.{Clock, DefaultClock}
 import mesosphere.marathon.event.{ MesosStatusUpdateEvent, SchedulerRegisteredEvent, SchedulerReregisteredEvent }
 import mesosphere.marathon.health.HealthCheckManager
 import mesosphere.marathon.state.PathId._
@@ -48,7 +48,7 @@ class MarathonSchedulerTest extends TestKit(ActorSystem("System")) with Marathon
     eventBus = system.eventStream
     scheduler = new MarathonScheduler(
       eventBus,
-      new DefaultClock,
+      Clock(),
       offerProcessor = ???,
       taskStatusEmitter = ???,
       frameworkIdUtil,

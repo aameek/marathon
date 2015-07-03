@@ -1,27 +1,20 @@
 package mesosphere.marathon.core
 
-import javax.inject.{ Named, Provider }
+import javax.inject.{ Provider, Named }
 
-import akka.actor.ActorRef
+import akka.actor.{ ActorRef, ActorSystem }
 import akka.event.EventStream
 import com.google.inject.name.Names
-import com.google.inject.{ AbstractModule, Inject, Provides, Singleton }
+import com.google.inject.{ Inject, AbstractModule, Provides, Scopes, Singleton }
 import mesosphere.marathon.MarathonSchedulerDriverHolder
 import mesosphere.marathon.core.CoreGuiceModule.TaskStatusUpdateActorProvider
-import mesosphere.marathon.core.base.actors.{ ActorsModule, DefaultActorsModule }
-import mesosphere.marathon.core.base.{ ClockModule, DefaultClockModule, DefaultRandomModule, DefaultShutdownHookModule, RandomModule, ShutdownHookModule }
-import mesosphere.marathon.core.launcher.impl.DefaultLauncherModule
-import mesosphere.marathon.core.launcher.{ LauncherModule, OfferProcessor }
-import mesosphere.marathon.core.matcher.OfferMatcherModule
-import mesosphere.marathon.core.matcher.app.AppOfferMatcherModule
-import mesosphere.marathon.core.matcher.app.impl.DefaultAppOfferMatcherModule
-import mesosphere.marathon.core.matcher.impl.DefaultOfferMatcherModule
-import mesosphere.marathon.core.task.bus.impl.DefaultTaskBusModule
-import mesosphere.marathon.core.task.bus.{ TaskBusModule, TaskStatusEmitter, TaskStatusObservables }
+import mesosphere.marathon.core.base.Clock
+import mesosphere.marathon.core.launcher.OfferProcessor
+import mesosphere.marathon.core.task.bus.{ TaskStatusEmitter, TaskStatusObservables }
 import mesosphere.marathon.core.task.tracker.TaskStatusUpdateActor
 import mesosphere.marathon.event.EventModule
 import mesosphere.marathon.health.HealthCheckManager
-import mesosphere.marathon.tasks.{ TaskFactory, TaskIdUtil, TaskQueue, TaskTracker }
+import mesosphere.marathon.tasks.{ TaskTracker, TaskIdUtil, TaskQueue }
 
 /**
   * Provides the glue between guice and the core modules.
@@ -30,77 +23,33 @@ class CoreGuiceModule extends AbstractModule {
 
   // Export classes used outside of core to guice
   @Provides @Singleton
-  def clock = clockModule.clock
+  def clock(coreModule: CoreModule): Clock = coreModule.clock
+
   @Provides @Singleton
-  def offerProcessor(launcherModule: LauncherModule): OfferProcessor = launcherModule.offerProcessor
+  def offerProcessor(coreModule: CoreModule): OfferProcessor = coreModule.launcherModule.offerProcessor
+
   @Provides @Singleton
-  def taskStatusEmitter: TaskStatusEmitter = taskBusModule.taskStatusEmitter
+  def taskStatusEmitter(coreModule: CoreModule): TaskStatusEmitter = coreModule.taskBusModule.taskStatusEmitter
+
   @Provides @Singleton
-  def taskStatusObservable: TaskStatusObservables = taskBusModule.taskStatusObservable
+  def taskStatusObservable(coreModule: CoreModule): TaskStatusObservables =
+    coreModule.taskBusModule.taskStatusObservable
+
   @Provides @Singleton
-  final def taskQueue(appOfferMatcherModule: AppOfferMatcherModule): TaskQueue = appOfferMatcherModule.taskQueue
+  final def taskQueue(coreModule: CoreModule): TaskQueue = coreModule.appOfferMatcherModule.taskQueue
 
   override def configure(): Unit = {
-    // Start on startup
+    bind(classOf[CoreModule]).to(classOf[DefaultCoreModule]).in(Scopes.SINGLETON)
     bind(classOf[ActorRef])
-      .annotatedWith(Names.named("taskStatusUpdateActor"))
+      .annotatedWith(Names.named("taskStatusUpdate"))
       .toProvider(classOf[TaskStatusUpdateActorProvider])
-      .asEagerSingleton()
+      .in(Scopes.SINGLETON)
   }
-
-  // private to core module
-
-  @Provides @Singleton
-  def clockModule_ = clockModule
-  lazy val clockModule: ClockModule = new DefaultClockModule()
-  lazy val randomModule: RandomModule = new DefaultRandomModule()
-  lazy val shutdownHookModule: ShutdownHookModule = new DefaultShutdownHookModule()
-
-  @Provides @Singleton
-  def taskBusModule_ = taskBusModule
-  lazy val taskBusModule: TaskBusModule = new DefaultTaskBusModule()
-
-  @Provides @Singleton
-  def actorsModule_ = actorsModule
-  lazy val actorsModule: ActorsModule = new DefaultActorsModule(shutdownHookModule)
-
-  @Provides @Singleton
-  def offerMatcherModule_ = offerMatcherModule
-  lazy val offerMatcherModule: OfferMatcherModule =
-    new DefaultOfferMatcherModule(taskBusModule, clockModule, randomModule, actorsModule)
-
-  @Provides @Singleton
-  def launcherModule(
-    marathonSchedulerDriverHolder: MarathonSchedulerDriverHolder,
-    offerMatcherModule: OfferMatcherModule): LauncherModule =
-    new DefaultLauncherModule(
-      clockModule, taskBusModule,
-      marathonSchedulerDriverHolder, offerMatcherModule
-    )
-
-  @Provides @Singleton
-  def appOfferMatcherModule(
-    actorsModule: ActorsModule,
-    clockModule: ClockModule,
-    offerMatcherModule: OfferMatcherModule,
-    taskBusModule: TaskBusModule,
-    taskTracker: TaskTracker,
-    taskFactory: TaskFactory): AppOfferMatcherModule = {
-
-    new DefaultAppOfferMatcherModule(
-      actorsModule,
-      clockModule,
-      offerMatcherModule,
-      taskBusModule,
-      taskTracker,
-      taskFactory)
-  }
-
 }
 
 object CoreGuiceModule {
   class TaskStatusUpdateActorProvider @Inject() (
-      actorsModule: ActorsModule,
+      actorSystem: ActorSystem,
       taskStatusObservable: TaskStatusObservables,
       @Named(EventModule.busName) eventBus: EventStream,
       @Named("schedulerActor") schedulerActor: ActorRef,
@@ -114,7 +63,7 @@ object CoreGuiceModule {
         taskStatusObservable, eventBus, schedulerActor, taskIdUtil, healthCheckManager, taskTracker,
         marathonSchedulerDriverHolder
       )
-      actorsModule.actorSystem.actorOf(props, "taskStatusUpdate")
+      actorSystem.actorOf(props, "taskStatusUpdate")
     }
   }
 }

@@ -6,6 +6,10 @@ trait Clock {
   def now(): Timestamp
 }
 
-class DefaultClock extends Clock {
+object Clock {
+  def apply(): Clock = new DefaultClock
+}
+
+private class DefaultClock extends Clock {
   override def now(): Timestamp = Timestamp.now()
 }

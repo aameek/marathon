@@ -1,19 +1,18 @@
 package mesosphere.marathon.core.matcher.app.impl
 
-import akka.actor.{ Props, ActorRef }
-import mesosphere.marathon.core.base.ClockModule
-import mesosphere.marathon.core.base.actors.ActorsModule
-import mesosphere.marathon.core.matcher.OfferMatcherModule
+import akka.actor.{ ActorRef, ActorSystem, Props }
+import mesosphere.marathon.core.base.Clock
+import mesosphere.marathon.core.matcher.OfferMatcherManager
 import mesosphere.marathon.core.matcher.app.AppOfferMatcherModule
-import mesosphere.marathon.core.task.bus.TaskBusModule
+import mesosphere.marathon.core.task.bus.TaskStatusObservables
 import mesosphere.marathon.state.AppDefinition
-import mesosphere.marathon.tasks.{ TaskFactory, TaskTracker, TaskQueue }
+import mesosphere.marathon.tasks.{ TaskFactory, TaskQueue, TaskTracker }
 
 private[core] class DefaultAppOfferMatcherModule(
-    actorsModule: ActorsModule,
-    clockModule: ClockModule,
-    offerMatcherModule: OfferMatcherModule,
-    taskBusModule: TaskBusModule,
+    actorSystem: ActorSystem,
+    clock: Clock,
+    subOfferMatcherManager: OfferMatcherManager,
+    taskStatusObservables: TaskStatusObservables,
     taskTracker: TaskTracker,
     taskFactory: TaskFactory) extends AppOfferMatcherModule {
 
@@ -21,15 +20,15 @@ private[core] class DefaultAppOfferMatcherModule(
 
   private[this] def appActorProps(app: AppDefinition, count: Int): Props =
     AppTaskLauncherActor.props(
-      offerMatcherModule.subOfferMatcherManager,
-      clockModule.clock,
+      subOfferMatcherManager,
+      clock,
       taskFactory,
-      taskBusModule.taskStatusObservable,
+      taskStatusObservables,
       taskTracker)(app, count)
 
   private[this] lazy val taskQueueActorRef: ActorRef = {
     val props = CoreTaskQueueActor.props(appActorProps)
-    actorsModule.actorSystem.actorOf(props, "taskQueue")
+    actorSystem.actorOf(props, "taskQueue")
   }
 
 }

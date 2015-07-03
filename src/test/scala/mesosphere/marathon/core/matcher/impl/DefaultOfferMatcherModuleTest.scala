@@ -1,29 +1,25 @@
 package mesosphere.marathon.core.matcher.impl
 
 import mesosphere.marathon.MarathonTestHelper
-import mesosphere.marathon.core.base.actors.DefaultActorsModule
-import mesosphere.marathon.core.base.{
-  ClockModule,
-  DefaultClockModule,
-  DefaultRandomModule,
-  DefaultShutdownHookModule,
-  ShutdownHookModule
-}
+import mesosphere.marathon.core.base.actors.ActorsModule
+import mesosphere.marathon.core.base.{ Clock, ShutdownHooks }
 import mesosphere.marathon.core.matcher.OfferMatcher.MatchedTasks
 import mesosphere.marathon.core.matcher.{ OfferMatcher, OfferMatcherModule }
-import mesosphere.marathon.core.task.bus.impl.DefaultTaskBusModule
+import mesosphere.marathon.core.task.bus.TaskBusModule
 import mesosphere.marathon.state.Timestamp
-import org.apache.mesos.Protos.{ SlaveID, TaskID, CommandInfo, TaskInfo, Offer }
+import org.apache.mesos.Protos.{ CommandInfo, Offer, SlaveID, TaskID, TaskInfo }
 import org.scalatest.{ BeforeAndAfter, FunSuite }
-import scala.concurrent.{ Await, Future }
-import scala.concurrent.duration._
+
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+import scala.concurrent.{ Await, Future }
+import scala.util.Random
 
 class DefaultOfferMatcherModuleTest extends FunSuite with BeforeAndAfter {
   test("no registered matchers result in empty result") {
     val offer: Offer = MarathonTestHelper.makeBasicOffer().build()
     val matchedTasksFuture: Future[MatchedTasks] =
-      module.offerMatcher.processOffer(clockModule.clock.now() + 1.second, offer)
+      module.offerMatcher.processOffer(clock.now() + 1.second, offer)
     val matchedTasks: MatchedTasks = Await.result(matchedTasksFuture, 3.seconds)
     assert(matchedTasks.tasks.isEmpty)
   }
@@ -36,7 +32,7 @@ class DefaultOfferMatcherModuleTest extends FunSuite with BeforeAndAfter {
     module.subOfferMatcherManager.addOfferMatcher(new ConstantOfferMatcher(subMatchedTasks))
 
     val matchedTasksFuture: Future[MatchedTasks] =
-      module.offerMatcher.processOffer(clockModule.clock.now() + 1.second, offer)
+      module.offerMatcher.processOffer(clock.now() + 1.second, offer)
     val matchedTasks: MatchedTasks = Await.result(matchedTasksFuture, 3.seconds)
     assert(matchedTasks.tasks == Seq(task))
   }
@@ -49,7 +45,7 @@ class DefaultOfferMatcherModuleTest extends FunSuite with BeforeAndAfter {
     module.subOfferMatcherManager.addOfferMatcher(new ConstantOfferMatcher(subMatchedTasks))
 
     val matchedTasksFuture: Future[MatchedTasks] =
-      module.offerMatcher.processOffer(clockModule.clock.now() + 1.second, offer)
+      module.offerMatcher.processOffer(clock.now() + 1.second, offer)
     val matchedTasks: MatchedTasks = Await.result(matchedTasksFuture, 3.seconds)
     assert(matchedTasks.tasks == Seq(task))
   }
@@ -64,18 +60,17 @@ class DefaultOfferMatcherModuleTest extends FunSuite with BeforeAndAfter {
   }
 
   private[this] var module: OfferMatcherModule = _
-  private[this] var shutdownHookModule: ShutdownHookModule = _
-  private[this] var clockModule: ClockModule = _
+  private[this] var shutdownHookModule: ShutdownHooks = _
+  private[this] var clock: Clock = _
 
   before {
-    shutdownHookModule = new DefaultShutdownHookModule
-    clockModule = new DefaultClockModule
-    module = new DefaultOfferMatcherModule(
-      taskModule = new DefaultTaskBusModule,
-      clockModule = clockModule,
-      randomModule = new DefaultRandomModule,
-      actorsModule = new DefaultActorsModule(shutdownHookModule)
-    )
+    shutdownHookModule = ShutdownHooks()
+    clock = Clock()
+    val random = Random
+    val actorSystem = ActorsModule(shutdownHookModule).actorSystem
+    val taskBusModule = TaskBusModule()
+    module = OfferMatcherModule(
+      clock, random, actorSystem, taskBusModule.taskStatusEmitter)
   }
 
   after {

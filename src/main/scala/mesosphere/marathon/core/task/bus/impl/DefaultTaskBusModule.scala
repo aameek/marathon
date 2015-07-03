@@ -2,7 +2,7 @@ package mesosphere.marathon.core.task.bus.impl
 
 import mesosphere.marathon.core.task.bus.{ TaskStatusObservables, TaskStatusEmitter, TaskBusModule }
 
-private[core] class DefaultTaskBusModule extends TaskBusModule {
+private[bus] class DefaultTaskBusModule extends TaskBusModule {
   override lazy val taskStatusEmitter: TaskStatusEmitter =
     new DefaultTaskStatusEmitter(internalTaskStatusEventStream)
   override lazy val taskStatusObservable: TaskStatusObservables =

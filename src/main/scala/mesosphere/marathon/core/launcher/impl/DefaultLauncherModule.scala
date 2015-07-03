@@ -1,23 +1,23 @@
 package mesosphere.marathon.core.launcher.impl
 
 import mesosphere.marathon.MarathonSchedulerDriverHolder
-import mesosphere.marathon.core.base.ClockModule
-import mesosphere.marathon.core.launcher.{ OfferProcessor, TaskLauncher, LauncherModule }
-import mesosphere.marathon.core.matcher.OfferMatcherModule
-import mesosphere.marathon.core.task.bus.TaskBusModule
+import mesosphere.marathon.core.base.Clock
+import mesosphere.marathon.core.launcher.{ LauncherModule, OfferProcessor, TaskLauncher }
+import mesosphere.marathon.core.matcher.OfferMatcher
+import mesosphere.marathon.core.task.bus.TaskStatusEmitter
 
-private[core] class DefaultLauncherModule(
-  clockModule: ClockModule,
-  taskBusModule: TaskBusModule,
+private[launcher] class DefaultLauncherModule(
+  clock: Clock,
   marathonSchedulerDriverHolder: MarathonSchedulerDriverHolder,
-  offerMatcherModule: OfferMatcherModule)
+  taskStatusEmitter: TaskStatusEmitter,
+  offerMatcher: OfferMatcher)
     extends LauncherModule {
 
   override lazy val offerProcessor: OfferProcessor =
-    new DefaultOfferProcessor(offerMatcherModule.offerMatcher, taskLauncher)
+    new DefaultOfferProcessor(offerMatcher, taskLauncher)
 
   override lazy val taskLauncher: TaskLauncher = new DefaultTaskLauncher(
     marathonSchedulerDriverHolder,
-    clockModule.clock,
-    taskBusModule.taskStatusEmitter)
+    clock,
+    taskStatusEmitter)
 }
