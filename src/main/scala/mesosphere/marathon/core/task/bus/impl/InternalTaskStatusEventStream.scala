@@ -2,15 +2,16 @@ package mesosphere.marathon.core.task.bus.impl
 
 import akka.event.japi.SubchannelEventBus
 import akka.util.Subclassification
-import mesosphere.marathon.core.task.bus.TaskStatusObservable.TaskStatusUpdate
+import mesosphere.marathon.core.task.bus.TaskStatusObservables.TaskStatusUpdate
 import mesosphere.marathon.state.PathId
 import rx.lang.scala.Observer
 
 /**
-  * The internally used eventStream for [[mesosphere.marathon.core.task.bus.TaskStatusObservable]]
+  * The internally used eventStream for [[mesosphere.marathon.core.task.bus.TaskStatusObservables]]
   */
 private[bus] class InternalTaskStatusEventStream
     extends SubchannelEventBus[TaskStatusUpdate, Observer[TaskStatusUpdate], PathId] {
+
   override def subclassification: Subclassification[PathId] = new Subclassification[PathId] {
     override def isEqual(x: PathId, y: PathId): Boolean = x == y
     /// Simplistic implementation! Only allow for subscription of specific appId or all appIds by

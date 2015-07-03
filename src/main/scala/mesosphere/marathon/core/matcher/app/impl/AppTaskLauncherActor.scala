@@ -8,8 +8,8 @@ import mesosphere.marathon.core.matcher.OfferMatcher.MatchedTasks
 import mesosphere.marathon.core.matcher.app.impl.AppTaskLauncherActor.TimeoutTaskLaunch
 import mesosphere.marathon.core.matcher.{ OfferMatcher, OfferMatcherManager }
 import mesosphere.marathon.core.matcher.util.ActorOfferMatcher
-import mesosphere.marathon.core.task.bus.TaskStatusObservable.TaskStatusUpdate
-import mesosphere.marathon.core.task.bus.{ MarathonTaskStatus, TaskStatusObservable }
+import mesosphere.marathon.core.task.bus.TaskStatusObservables.TaskStatusUpdate
+import mesosphere.marathon.core.task.bus.{ MarathonTaskStatus, TaskStatusObservables }
 import mesosphere.marathon.state.AppDefinition
 import mesosphere.marathon.tasks.TaskFactory.CreatedTask
 import mesosphere.marathon.tasks.TaskQueue.QueuedTaskCount
@@ -23,7 +23,7 @@ private[impl] object AppTaskLauncherActor {
     offerMatcherManager: OfferMatcherManager,
     clock: Clock,
     taskFactory: TaskFactory,
-    taskStatusObservable: TaskStatusObservable,
+    taskStatusObservable: TaskStatusObservables,
     taskTracker: TaskTracker)(
       app: AppDefinition,
       initialCount: Int): Props = {
@@ -55,7 +55,7 @@ private class AppTaskLauncherActor(
   offerMatcherManager: OfferMatcherManager,
   clock: Clock,
   taskFactory: TaskFactory,
-  taskStatusObservable: TaskStatusObservable,
+  taskStatusObservable: TaskStatusObservables,
   taskTracker: TaskTracker,
   app: AppDefinition,
   initialCount: Int)

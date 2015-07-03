@@ -1,7 +1,7 @@
 package mesosphere.marathon.core.task.bus.impl
 
 import mesosphere.marathon.core.task.bus.{ TaskStatusUpdateTH, TaskBusModule }
-import mesosphere.marathon.core.task.bus.TaskStatusObservable.TaskStatusUpdate
+import mesosphere.marathon.core.task.bus.TaskStatusObservables.TaskStatusUpdate
 import mesosphere.marathon.state.PathId
 import org.scalatest.{ BeforeAndAfter, FunSuite }
 

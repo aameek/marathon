@@ -6,7 +6,7 @@ import mesosphere.marathon.MarathonSchedulerDriverHolder
 import mesosphere.marathon.core.base.Clock
 import mesosphere.marathon.core.launcher.TaskLauncher
 import mesosphere.marathon.core.task.bus.{ MarathonTaskStatus, TaskStatusEmitter }
-import mesosphere.marathon.core.task.bus.TaskStatusObservable.TaskStatusUpdate
+import mesosphere.marathon.core.task.bus.TaskStatusObservables.TaskStatusUpdate
 import org.apache.mesos.Protos.{ OfferID, TaskInfo }
 import org.apache.mesos.SchedulerDriver
 import org.slf4j.LoggerFactory

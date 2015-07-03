@@ -17,7 +17,7 @@ import mesosphere.marathon.core.matcher.app.AppOfferMatcherModule
 import mesosphere.marathon.core.matcher.app.impl.DefaultAppOfferMatcherModule
 import mesosphere.marathon.core.matcher.impl.DefaultOfferMatcherModule
 import mesosphere.marathon.core.task.bus.impl.DefaultTaskBusModule
-import mesosphere.marathon.core.task.bus.{ TaskBusModule, TaskStatusEmitter, TaskStatusObservable }
+import mesosphere.marathon.core.task.bus.{ TaskBusModule, TaskStatusEmitter, TaskStatusObservables }
 import mesosphere.marathon.core.task.tracker.TaskStatusUpdateActor
 import mesosphere.marathon.event.EventModule
 import mesosphere.marathon.health.HealthCheckManager
@@ -36,7 +36,7 @@ class CoreGuiceModule extends AbstractModule {
   @Provides @Singleton
   def taskStatusEmitter: TaskStatusEmitter = taskBusModule.taskStatusEmitter
   @Provides @Singleton
-  def taskStatusObservable: TaskStatusObservable = taskBusModule.taskStatusObservable
+  def taskStatusObservable: TaskStatusObservables = taskBusModule.taskStatusObservable
   @Provides @Singleton
   final def taskQueue(appOfferMatcherModule: AppOfferMatcherModule): TaskQueue = appOfferMatcherModule.taskQueue
 
@@ -101,7 +101,7 @@ class CoreGuiceModule extends AbstractModule {
 object CoreGuiceModule {
   class TaskStatusUpdateActorProvider @Inject() (
       actorsModule: ActorsModule,
-      taskStatusObservable: TaskStatusObservable,
+      taskStatusObservable: TaskStatusObservables,
       @Named(EventModule.busName) eventBus: EventStream,
       @Named("schedulerActor") schedulerActor: ActorRef,
       taskIdUtil: TaskIdUtil,
@@ -114,8 +114,6 @@ object CoreGuiceModule {
         taskStatusObservable, eventBus, schedulerActor, taskIdUtil, healthCheckManager, taskTracker,
         marathonSchedulerDriverHolder
       )
-      println("XXXXX" +
-        "\nXXXXXXXX\nXXXXX")
       actorsModule.actorSystem.actorOf(props, "taskStatusUpdate")
     }
   }

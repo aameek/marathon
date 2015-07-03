@@ -20,6 +20,8 @@ class ActorOfferMatcher(clock: Clock, actorRef: ActorRef) extends OfferMatcher {
     val answerFuture = actorRef ? ActorOfferMatcher.MatchOffer(deadline, offer)
     answerFuture.mapTo[MatchedTasks]
   }
+
+  override def toString: String = s"ActorOfferMatcher($actorRef)"
 }
 
 object ActorOfferMatcher {

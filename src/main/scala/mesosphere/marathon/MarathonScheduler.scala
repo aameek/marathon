@@ -5,7 +5,7 @@ import javax.inject.{ Inject, Named }
 import akka.event.EventStream
 import mesosphere.marathon.core.base.Clock
 import mesosphere.marathon.core.launcher.OfferProcessor
-import mesosphere.marathon.core.task.bus.TaskStatusObservable.TaskStatusUpdate
+import mesosphere.marathon.core.task.bus.TaskStatusObservables.TaskStatusUpdate
 import mesosphere.marathon.core.task.bus.{ MarathonTaskStatus, TaskStatusEmitter }
 import mesosphere.marathon.event._
 import mesosphere.util.state.FrameworkIdUtil

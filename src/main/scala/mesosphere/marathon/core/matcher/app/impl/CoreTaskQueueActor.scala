@@ -3,7 +3,6 @@ package mesosphere.marathon.core.matcher.app.impl
 import akka.actor.SupervisorStrategy.Stop
 import akka.actor.{
   PoisonPill,
-  Kill,
   Terminated,
   Actor,
   ActorLogging,

@@ -5,9 +5,10 @@ import akka.pattern.pipe
 import akka.event.LoggingReceive
 import mesosphere.marathon.core.base.Clock
 import mesosphere.marathon.core.matcher.OfferMatcher
+import mesosphere.marathon.core.matcher.OfferMatcher.MatchedTasks
 import mesosphere.marathon.core.matcher.impl.OfferMatcherMultiplexerActor.OfferData
 import mesosphere.marathon.core.matcher.util.ActorOfferMatcher
-import mesosphere.marathon.core.task.bus.TaskStatusObservable.TaskStatusUpdate
+import mesosphere.marathon.core.task.bus.TaskStatusObservables.TaskStatusUpdate
 import mesosphere.marathon.core.task.bus.{ MarathonTaskStatus, TaskStatusEmitter }
 import mesosphere.marathon.state.Timestamp
 import mesosphere.marathon.tasks.ResourceUtil
@@ -172,7 +173,11 @@ private class OfferMatcherMultiplexerActor private (random: Random, clock: Clock
     nextConsumerOpt match {
       case Some((nextConsumer, newData)) =>
         import context.dispatcher
-        pipe(nextConsumer.processOffer(newData.deadline, newData.offer)).pipeTo(self)
+        nextConsumer.processOffer(newData.deadline, newData.offer).recover {
+          case NonFatal(e) =>
+            log.warning("Received error from {}", e)
+            MatchedTasks(data.offer.getId, Seq.empty)
+        }.pipeTo(self)
       case None =>
         data.sender ! OfferMatcher.MatchedTasks(data.offer.getId, data.tasks)
         offerQueues -= data.offer.getId

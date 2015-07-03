@@ -8,8 +8,8 @@ import mesosphere.marathon.MarathonSchedulerActor.ScaleApp
 import mesosphere.marathon.MarathonSchedulerDriverHolder
 import mesosphere.marathon.Protos.MarathonTask
 import mesosphere.marathon.core.task.bus.MarathonTaskStatus.WithMesosStatus
-import mesosphere.marathon.core.task.bus.TaskStatusObservable
-import mesosphere.marathon.core.task.bus.TaskStatusObservable.TaskStatusUpdate
+import mesosphere.marathon.core.task.bus.TaskStatusObservables
+import mesosphere.marathon.core.task.bus.TaskStatusObservables.TaskStatusUpdate
 import mesosphere.marathon.event.{ EventModule, MesosStatusUpdateEvent }
 import mesosphere.marathon.health.HealthCheckManager
 import mesosphere.marathon.state.Timestamp
@@ -21,7 +21,7 @@ import scala.util.{ Failure, Success }
 
 private[core] object TaskStatusUpdateActor {
   def props(
-    taskStatusObservable: TaskStatusObservable,
+    taskStatusObservable: TaskStatusObservables,
     @Named(EventModule.busName) eventBus: EventStream,
     @Named("schedulerActor") schedulerActor: ActorRef,
     taskIdUtil: TaskIdUtil,
@@ -48,7 +48,7 @@ private[core] object TaskStatusUpdateActor {
   *   => This has to be tied to task reconciliation somehow.
   */
 private class TaskStatusUpdateActor(
-  taskStatusObservable: TaskStatusObservable,
+  taskStatusObservable: TaskStatusObservables,
   @Named(EventModule.busName) eventBus: EventStream,
   @Named("schedulerActor") schedulerActor: ActorRef,
   taskIdUtil: TaskIdUtil,

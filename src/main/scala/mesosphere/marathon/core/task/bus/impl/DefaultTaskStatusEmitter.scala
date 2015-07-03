@@ -1,7 +1,7 @@
 package mesosphere.marathon.core.task.bus.impl
 
 import mesosphere.marathon.core.task.bus.TaskStatusEmitter
-import mesosphere.marathon.core.task.bus.TaskStatusObservable.TaskStatusUpdate
+import mesosphere.marathon.core.task.bus.TaskStatusObservables.TaskStatusUpdate
 import org.slf4j.LoggerFactory
 
 private[bus] class DefaultTaskStatusEmitter(internalTaskStatusEventStream: InternalTaskStatusEventStream)
